@@ -1,137 +1,88 @@
 function waveCalculator()
-    % Create the figure for the user interface
-    f = figure('Position', [100, 100, 400, 400], 'Name', 'Wave Calculator', 'NumberTitle', 'off');
+    % Constants
+    g = 9.81; % Acceleration due to gravity
     
-    % Deep Water Values Section
-    uicontrol('Style', 'text', 'Position', [20 350 360 20], 'String', 'Deep Water Values:', 'FontWeight', 'bold');
+    % Hyperbolic functions
+    hyperbolicSinh = @(x) (exp(x) - exp(-x)) / 2;
+    hyperbolicCosh = @(x) (exp(x) + exp(-x)) / 2;
+    hyperbolicTanh = @(x) hyperbolicSinh(x) / hyperbolicCosh(x);
+
+    % Input values (you can modify these as needed or use input function for user inputs)
+    Hin = 5;   % Wave Height (H, m)
+    Tin = 12;  % Period (T, s) or Frequency (f, Hz)
+    din = 5;  % Local Depth (d, m)
+    angle0 = 0; % Wave Angle (degrees)
+    torf = 'Period'; % 'Period' or 'Frequency'
     
-    % Wave Height
-    uicontrol('Style', 'text', 'Position', [20 310 100 20], 'String', 'Wave Height (m):');
-    Hin = uicontrol('Style', 'edit', 'Position', [120 310 100 20], 'String', '1.0');
-    
-    % Period or Frequency Choice
-    uicontrol('Style', 'text', 'Position', [20 270 100 20], 'String', 'Period or Frequency:');
-    torf = uicontrol('Style', 'popup', 'Position', [120 270 100 20], 'String', {'Period', 'Frequency (Hz)'});
-    Tin = uicontrol('Style', 'edit', 'Position', [240 270 100 20], 'String', '12.0');
-    
-    % Wave Angle
-    uicontrol('Style', 'text', 'Position', [20 230 100 20], 'String', 'Wave Angle (°):');
-    angle0 = uicontrol('Style', 'edit', 'Position', [120 230 100 20], 'String', '0.0');
-    
-    % Local Depth
-    uicontrol('Style', 'text', 'Position', [20 190 100 20], 'String', 'Local Depth (m):');
-    din = uicontrol('Style', 'edit', 'Position', [120 190 100 20], 'String', '5.0');
-    
-    % Buttons
-    uicontrol('Style', 'pushbutton', 'Position', [20 130 100 30], 'String', 'Calculate', 'Callback', @calculateWaveParameters);
-    uicontrol('Style', 'pushbutton', 'Position', [120 130 100 30], 'String', 'Reset', 'Callback', @resetFields);
-    
-    % Results Section
-    uicontrol('Style', 'text', 'Position', [20 90 100 20], 'String', 'Results:');
-    
-    % Result Fields
-    resultLabels = {'L (m) =', 'k = 2\pi/L =', 'C = L/T =', 'Cg =', 'n = Cg/C =', 'Ks =', 'Kr =', 'Angle =', 'H =', 'u_b ='};
-    resultFields = struct();
-    
-    yOffset = 50;
-    for i = 1:length(resultLabels)
-        uicontrol('Style', 'text', 'Position', [20 yOffset 100 20], 'String', resultLabels{i});
-        resultFields.(sprintf('out%d', i)) = uicontrol('Style', 'edit', 'Position', [120 yOffset 200 20], 'String', '', 'Enable', 'off');
-        yOffset = yOffset - 30;
+    % If frequency is selected
+    if strcmp(torf, 'Frequency')
+        frequency = Tin; 
+        T = 1 / frequency;
+    else
+        T = Tin;
     end
-    
-    % Nested functions for callbacks
-    function calculateWaveParameters(~, ~)
-        try
-            % Get input values
-            H0 = str2double(get(Hin, 'String'));
-            if isnan(H0), error('Invalid Wave Height'); end
-            
-            T = 0;
-            if strcmp(torf.String{torf.Value}, 'Period')
-                T = str2double(get(Tin, 'String'));
-            else
-                freq = str2double(get(Tin, 'String'));
-                if isnan(freq) || freq == 0, error('Invalid Frequency'); end
-                T = 1 / freq;
-            end
-            if isnan(T) || T == 0, error('Invalid Period'); end
-            
-            d = str2double(get(din, 'String'));
-            if isnan(d), error('Invalid Local Depth'); end
-            
-            thet0 = str2double(get(angle0, 'String'));
-            if isnan(thet0), thet0 = 0.0; end
-            
-            % Calculations (Assumed Refract class functions)
-            k = waveNumber(d, T);
-            L = 2 * pi / k;
-            C = L / T;
-            Angle = theta(thet0, k, T);
-            Cg = groupVelocity(T, d, k);
-            n = Cg / C;
-            Ks = shoalingCoef(T, Cg);
-            Kr = refractionCoef(thet0, Angle);
-            H1 = Ks * Kr * H0;
-            if H1 > 0.8 * d
-                H1 = 0.8 * d;
-                set(resultFields.out9, 'String', sprintf('%.6f, breaking', H1));
-            else
-                set(resultFields.out9, 'String', sprintf('%.6f', H1));
-            end
-            
-            ub = (2 * pi / T) * H1 / (2 * sinh(k * d));
-            % Update the result fields
-            set(resultFields.out1, 'String', sprintf('%.6f', L));
-            set(resultFields.out2, 'String', sprintf('%.6f', k));
-            set(resultFields.out3, 'String', sprintf('%.6f', C));
-            set(resultFields.out4, 'String', sprintf('%.6f', Cg));
-            set(resultFields.out5, 'String', sprintf('%.6f', n));
-            set(resultFields.out6, 'String', sprintf('%.6f', Ks));
-            set(resultFields.out7, 'String', sprintf('%.6f', Kr));
-            set(resultFields.out8, 'String', sprintf('%.6f', Angle));
-            set(resultFields.out9, 'String', sprintf('%.6f', H1));
-            set(resultFields.out10, 'String', sprintf('%.6f', ub));
-        catch ME
-            errordlg(['Error: ', ME.message]);
+
+    % Perform wave calculations
+    [L, k, C, C0, thetaDeg, Cg, n, Ks, Kr, Hshal, ub] = calculateWaveProperties(Hin, T, din, angle0, g, hyperbolicSinh, hyperbolicCosh, hyperbolicTanh);
+
+    % Display the results
+    fprintf('L (m) = %.4f\n', L);
+    fprintf('k (1/m) = %.4f\n', k);
+    fprintf('C (m/s) = %.4f\n', C);
+    fprintf('Cg (m/s) = %.4f\n', Cg);
+    fprintf('n = Cg / C = %.4f\n', n);
+    fprintf('Ks = %.4f\n', Ks);
+    fprintf('Kr = %.4f\n', Kr);
+    fprintf('Angle (degrees) = %.4f\n', thetaDeg);
+    fprintf('H (m) = %.4f\n', Hshal);
+    fprintf('ub (m/s) = %.4f\n', ub);
+end
+
+function [L, k, C, C0, thetaDeg, Cg, n, Ks, Kr, Hshal, ub] = calculateWaveProperties(Hin, T, din, angle0, g, hyperbolicSinh, hyperbolicCosh, hyperbolicTanh)
+    % Wave number (k) using iterative method
+    omega = 2 * pi / T;
+    k = omega^2 / g; % Initial guess for k
+    for i = 1:1000
+        kPrev = k;
+        k = omega^2 / (g * tanh(k * din));
+        if abs(k - kPrev) < 1e-10
+            break;
         end
     end
-
-    function resetFields(~, ~)
-        % Reset input and output fields
-        set(Hin, 'String', '1.0');
-        set(Tin, 'String', '12.0');
-        set(din, 'String', '5.0');
-        set(angle0, 'String', '0.0');
-        set(torf, 'Value', 1);
-        for i = 1:length(resultLabels)
-            set(resultFields.(sprintf('out%d', i)), 'String', '');
-        end
+    
+    % Wave length (L) and Celerity (C)
+    L = 2 * pi / k;
+    C = L / T;
+    
+    % Deep water values (k0, L0, C0)
+    k0 = (2 * pi) / (g * T^2 / (2 * pi));
+    L0 = 2 * pi / k0;
+    C0 = L0 / T;
+    
+    % Refraction angle (theta) using Snell's Law
+    theta = asin((C / C0) * sin(angle0 * pi / 180)) * 180 / pi;
+    thetaDeg = theta;
+    
+    % Group velocity (Cg)
+    n = 0.5 * (1 + (2 * k * din) / sinh(2 * k * din));
+    Cg = n * C;
+    
+    % Shoaling coefficient (Ks)
+    Cg0 = C0 / 2; % Deep water group velocity
+    Ks = sqrt(Cg0 / Cg);
+    
+    % Refraction coefficient (Kr)
+    Kr = sqrt(cos(angle0 * pi / 180) / cos(theta * pi / 180));
+    
+    % Shallow water wave height (Hshal)
+    Hshal = Ks * Kr * Hin;
+    Hb = 0.78 * din;
+    
+    % Adjust Hshal if it exceeds the breaking height
+    if Hshal > Hb
+        Hshal = Hb;
     end
-end
-
-% Helper functions for wave calculations
-function k = waveNumber(d, T)
-    % Placeholder calculation for wave number
-    k = 2 * pi / T;
-end
-
-function Angle = theta(thet0, k, T)
-    % Placeholder for refraction angle calculation
-    Angle = thet0; % This would typically use k and T
-end
-
-function Cg = groupVelocity(T, d, k)
-    % Placeholder for group velocity
-    Cg = 2 * pi / T; % Simplified
-end
-
-function Ks = shoalingCoef(T, Cg)
-    % Placeholder for shoaling coefficient
-    Ks = 1; % Simplified
-end
-
-function Kr = refractionCoef(thet0, Angle)
-    % Placeholder for refraction coefficient
-    Kr = 1; % Simplified
+    
+    % Bottom velocity (ub)
+    ub = (2 * pi / T) * (Hshal / 2) / hyperbolicSinh(k * din);
 end
