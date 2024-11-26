@@ -1,137 +1,91 @@
-function waveCalculator()
-    % Create the figure for the user interface
-    f = figure('Position', [100, 100, 400, 400], 'Name', 'Wave Calculator', 'NumberTitle', 'off');
-    
-    % Deep Water Values Section
-    uicontrol('Style', 'text', 'Position', [20 350 360 20], 'String', 'Deep Water Values:', 'FontWeight', 'bold');
-    
-    % Wave Height
-    uicontrol('Style', 'text', 'Position', [20 310 100 20], 'String', 'Wave Height (m):');
-    Hin = uicontrol('Style', 'edit', 'Position', [120 310 100 20], 'String', '1.0');
-    
-    % Period or Frequency Choice
-    uicontrol('Style', 'text', 'Position', [20 270 100 20], 'String', 'Period or Frequency:');
-    torf = uicontrol('Style', 'popup', 'Position', [120 270 100 20], 'String', {'Period', 'Frequency (Hz)'});
-    Tin = uicontrol('Style', 'edit', 'Position', [240 270 100 20], 'String', '12.0');
-    
-    % Wave Angle
-    uicontrol('Style', 'text', 'Position', [20 230 100 20], 'String', 'Wave Angle (°):');
-    angle0 = uicontrol('Style', 'edit', 'Position', [120 230 100 20], 'String', '0.0');
-    
-    % Local Depth
-    uicontrol('Style', 'text', 'Position', [20 190 100 20], 'String', 'Local Depth (m):');
-    din = uicontrol('Style', 'edit', 'Position', [120 190 100 20], 'String', '5.0');
-    
-    % Buttons
-    uicontrol('Style', 'pushbutton', 'Position', [20 130 100 30], 'String', 'Calculate', 'Callback', @calculateWaveParameters);
-    uicontrol('Style', 'pushbutton', 'Position', [120 130 100 30], 'String', 'Reset', 'Callback', @resetFields);
-    
-    % Results Section
-    uicontrol('Style', 'text', 'Position', [20 90 100 20], 'String', 'Results:');
-    
-    % Result Fields
-    resultLabels = {'L (m) =', 'k = 2\pi/L =', 'C = L/T =', 'Cg =', 'n = Cg/C =', 'Ks =', 'Kr =', 'Angle =', 'H =', 'u_b ='};
-    resultFields = struct();
-    
-    yOffset = 50;
-    for i = 1:length(resultLabels)
-        uicontrol('Style', 'text', 'Position', [20 yOffset 100 20], 'String', resultLabels{i});
-        resultFields.(sprintf('out%d', i)) = uicontrol('Style', 'edit', 'Position', [120 yOffset 200 20], 'String', '', 'Enable', 'off');
-        yOffset = yOffset - 30;
-    end
-    
-    % Nested functions for callbacks
-    function calculateWaveParameters(~, ~)
-        try
-            % Get input values
-            H0 = str2double(get(Hin, 'String'));
-            if isnan(H0), error('Invalid Wave Height'); end
-            
-            T = 0;
-            if strcmp(torf.String{torf.Value}, 'Period')
-                T = str2double(get(Tin, 'String'));
-            else
-                freq = str2double(get(Tin, 'String'));
-                if isnan(freq) || freq == 0, error('Invalid Frequency'); end
-                T = 1 / freq;
-            end
-            if isnan(T) || T == 0, error('Invalid Period'); end
-            
-            d = str2double(get(din, 'String'));
-            if isnan(d), error('Invalid Local Depth'); end
-            
-            thet0 = str2double(get(angle0, 'String'));
-            if isnan(thet0), thet0 = 0.0; end
-            
-            % Calculations (Assumed Refract class functions)
-            k = waveNumber(d, T);
-            L = 2 * pi / k;
-            C = L / T;
-            Angle = theta(thet0, k, T);
-            Cg = groupVelocity(T, d, k);
-            n = Cg / C;
-            Ks = shoalingCoef(T, Cg);
-            Kr = refractionCoef(thet0, Angle);
-            H1 = Ks * Kr * H0;
-            if H1 > 0.8 * d
-                H1 = 0.8 * d;
-                set(resultFields.out9, 'String', sprintf('%.6f, breaking', H1));
-            else
-                set(resultFields.out9, 'String', sprintf('%.6f', H1));
-            end
-            
-            ub = (2 * pi / T) * H1 / (2 * sinh(k * d));
-            % Update the result fields
-            set(resultFields.out1, 'String', sprintf('%.6f', L));
-            set(resultFields.out2, 'String', sprintf('%.6f', k));
-            set(resultFields.out3, 'String', sprintf('%.6f', C));
-            set(resultFields.out4, 'String', sprintf('%.6f', Cg));
-            set(resultFields.out5, 'String', sprintf('%.6f', n));
-            set(resultFields.out6, 'String', sprintf('%.6f', Ks));
-            set(resultFields.out7, 'String', sprintf('%.6f', Kr));
-            set(resultFields.out8, 'String', sprintf('%.6f', Angle));
-            set(resultFields.out9, 'String', sprintf('%.6f', H1));
-            set(resultFields.out10, 'String', sprintf('%.6f', ub));
-        catch ME
-            errordlg(['Error: ', ME.message]);
-        end
-    end
+# Wave Calculator GUI  
 
-    function resetFields(~, ~)
-        % Reset input and output fields
-        set(Hin, 'String', '1.0');
-        set(Tin, 'String', '12.0');
-        set(din, 'String', '5.0');
-        set(angle0, 'String', '0.0');
-        set(torf, 'Value', 1);
-        for i = 1:length(resultLabels)
-            set(resultFields.(sprintf('out%d', i)), 'String', '');
-        end
-    end
-end
+## Overview  
+The **Wave Calculator** is a MATLAB-based GUI tool designed to compute various wave parameters such as wave length, wave speed, wave height, and others based on user-provided inputs. The tool provides an interactive interface for entering wave properties and displays calculated results dynamically.  
 
-% Helper functions for wave calculations
-function k = waveNumber(d, T)
-    % Placeholder calculation for wave number
-    k = 2 * pi / T;
-end
+This application is useful for students, researchers, and engineers working in fields such as oceanography, coastal engineering, and marine structures.  
 
-function Angle = theta(thet0, k, T)
-    % Placeholder for refraction angle calculation
-    Angle = thet0; % This would typically use k and T
-end
+---
 
-function Cg = groupVelocity(T, d, k)
-    % Placeholder for group velocity
-    Cg = 2 * pi / T; % Simplified
-end
+## Features  
+- **Interactive GUI**:  
+  A user-friendly interface with input fields, dropdown menus, and buttons for calculations.  
 
-function Ks = shoalingCoef(T, Cg)
-    % Placeholder for shoaling coefficient
-    Ks = 1; % Simplified
-end
+- **Customizable Inputs**:  
+  Enter wave height, period or frequency, wave angle, and local water depth.  
 
-function Kr = refractionCoef(thet0, Angle)
-    % Placeholder for refraction coefficient
-    Kr = 1; % Simplified
-end
+- **Calculated Parameters**:  
+  - Wave length (`L`)  
+  - Wave number (`k`)  
+  - Wave speed (`C`)  
+  - Group velocity (`Cg`)  
+  - Shoaling coefficient (`Ks`)  
+  - Refraction coefficient (`Kr`)  
+  - Resultant wave height (`H`)  
+  - Bottom orbital velocity (`u_b`)  
+
+- **Error Handling**:  
+  Input validation ensures that only valid numeric values are accepted. Errors are displayed via pop-up dialogs.  
+
+- **Reset Functionality**:  
+  Resets all inputs and outputs to their default values.  
+
+---
+
+## How It Works  
+
+### **Input Fields**
+Users can input or select:  
+1. **Wave Height (m)**: Enter the initial wave height (default: `1.0`).  
+2. **Period or Frequency**:  
+   - Choose between period (seconds) or frequency (Hz).  
+   - Enter the corresponding value (default: `12.0` seconds).  
+3. **Wave Angle (°)**: Enter the wave propagation angle (default: `0.0`).  
+4. **Local Depth (m)**: Enter the depth of the water body (default: `5.0`).  
+
+### **Buttons**
+1. **Calculate**:  
+   Computes all wave parameters using the entered inputs. Results are displayed in the results section.  
+2. **Reset**:  
+   Clears all results and restores default input values.  
+
+### **Results**
+The results section displays the calculated wave parameters in a read-only format. Parameters include wave length, wave speed, and more.  
+
+---
+
+## Installation  
+1. Download or clone this repository.  
+2. Open the `waveCalculator.m` file in MATLAB.  
+3. Run the script to launch the GUI.  
+
+---
+
+## Dependencies  
+This program requires MATLAB R2018b or later. No additional toolboxes are necessary.  
+
+---
+
+## How to Use  
+1. Run the script in MATLAB to launch the GUI.  
+2. Enter the desired wave parameters in the input fields.  
+3. Click **Calculate** to compute wave parameters.  
+4. Review results in the output section.  
+5. Click **Reset** to clear fields and start a new calculation.  
+
+---
+
+## Future Improvements  
+- Replace placeholder functions (`waveNumber`, `groupVelocity`, etc.) with accurate scientific equations.  
+- Add visualization of wave characteristics (e.g., wave propagation or refraction).  
+- Implement more advanced error handling and validation.  
+
+---
+
+## License  
+This project is licensed under the MIT License. See the `LICENSE` file for details.  
+
+---
+
+## Contact  
+For questions or feedback, please reach out to pouyazarbipour@gmail.com.
