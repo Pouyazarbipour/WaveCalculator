@@ -1,7 +1,7 @@
 # Wave Calculator GUI  
 
 ## Overview  
-The **Wave Calculator** is a MATLAB-based GUI tool designed to compute various wave parameters such as wave length, wave speed, wave height, and others based on user-provided inputs. The tool provides an interactive interface for entering wave properties and displays calculated results dynamically.  
+The **Wave Calculator GUI** is a MATLAB-based GUI tool designed to compute various wave parameters such as wave length, wave speed, wave height, and others based on user-provided inputs. The tool provides an interactive interface for entering wave properties and displays calculated results dynamically.  
 
 This application is useful for students, researchers, and engineers working in fields such as oceanography, coastal engineering, and marine structures.  
 
@@ -22,7 +22,8 @@ This application is useful for students, researchers, and engineers working in f
   - Shoaling coefficient (`Ks`)  
   - Refraction coefficient (`Kr`)  
   - Resultant wave height (`H`)  
-  - Bottom orbital velocity (`u_b`)  
+  - Bottom orbital velocity (`u_b`)
+  - more Parameters
 
 - **Error Handling**:  
   Input validation ensures that only valid numeric values are accepted. Errors are displayed via pop-up dialogs.  
@@ -56,13 +57,13 @@ The results section displays the calculated wave parameters in a read-only forma
 
 ## Installation  
 1. Download or clone this repository.  
-2. Open the `waveCalculator.m` file in MATLAB.  
+2. Open the `waveCalculatorGUI.m` file in MATLAB.  
 3. Run the script to launch the GUI.  
 
 ---
 
 ## Dependencies  
-This program requires MATLAB R2018b or later. No additional toolboxes are necessary.  
+This program requires MATLAB R2017b or later. No additional toolboxes are necessary.  
 
 ---
 
