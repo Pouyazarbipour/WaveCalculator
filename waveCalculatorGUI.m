@@ -1,3 +1,5 @@
+%% POUYA ZARBIPOUR LAKPOSHTEH EMAIL: pouyazarbipour@gmail.com
+
 function waveCalculatorGUI()
     % Create the figure for the GUI
     fig = uifigure('Name', 'Wave Calculator', 'Position', [100 100 600 500]);
