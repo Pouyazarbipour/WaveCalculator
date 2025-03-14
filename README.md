@@ -3,7 +3,9 @@
 ## Overview  
 The **Wave Calculator GUI** is a MATLAB-based GUI tool designed to compute various wave parameters such as wave length, wave speed, wave height, and others based on user-provided inputs. The tool provides an interactive interface for entering wave properties and displays calculated results dynamically.  
 
-This application is useful for students, researchers, and engineers working in fields such as oceanography, coastal engineering, and marine structures.  
+This application is useful for students, researchers, and engineers working in fields such as oceanography, coastal engineering, and marine structures.
+
+To download the **.EXE** file, visit this [link](https://drive.google.com/file/d/1GqaxNnod_319n2YhyvUYSnawCfyrBS79/view?usp=sharing).
 
 ---
 
