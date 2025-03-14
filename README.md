@@ -70,7 +70,7 @@ This program requires MATLAB R2017b or later. No additional toolboxes are necess
 ---
 
 ## How to Use  
-1. Run the script in MATLAB to launch the GUI.  
+1. Run the GUI App.  
 2. Enter the desired wave parameters in the input fields.  
 3. Click **Calculate** to compute wave parameters.  
 4. Review results in the output section.  
